@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>クニトリ（デモ版）｜寝ている間も国が広がる陣取り</title>
+<meta name="description" content="みんなでひとつの大陸を取り合う、放置でも遊べる陣取りゲームのデモ版。5分ごとに国が自動で広がり、行動力を使えば狙った場所へ進軍できる。登録なしで無料。">
+<meta property="og:title" content="クニトリ（デモ版）｜寝ている間も国が広がる陣取り">
+<meta property="og:description" content="みんなでひとつの大陸を取り合う、放置でも遊べる陣取りゲーム。5分ごとに国が自動で広がる。登録なし・無料。">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://9qu1.com/kunitori/og.png">
+<meta property="og:url" content="https://9qu1.com/kunitori/">
+<link rel="canonical" href="https://9qu1.com/kunitori/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#F5ECD5">
+<link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Noto+Sans+JP:wght@400;700&family=Noto+Serif+JP:wght@700&display=swap">
+<link rel="stylesheet" href="style.css?v=0.3.0">
+</head>
+<body>
+<div id="app">
+  <canvas id="map" aria-label="大陸の地図"></canvas>
+
+  <header id="hud">
+    <div class="hud-row top">
+      <div class="brand" id="hud-title"><img src="img/logo.webp" alt="クニトリ" width="720" height="227"><span class="demo">デモ版</span></div>
+      <div class="nation-card" id="hud-nation" hidden>
+        <span class="crest" id="hud-dot"></span>
+        <div class="nc-body">
+          <b id="hud-name"></b>
+          <div class="nc-badges">
+            <span class="badge shield" id="hud-shield" hidden></span>
+            <span class="badge sleep" id="hud-dormant" hidden>眠りの国</span>
+          </div>
+        </div>
+      </div>
+      <div class="spacer"></div>
+      <div class="next" title="次のターンまで"><small>次の拡張</small><b id="hud-next">--:--</b></div>
+    </div>
+    <div class="hud-row stats" id="hud-stats" hidden>
+      <div class="stat"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20 15 9M15 9l2-5 3-1-1 3-5 2M20 20 9 9M9 9 7 4 4 3l1 3 5 2M6 16l2 2M18 16l-2 2"/></svg></span><div><small class="lbl">兵力</small><div class="v"><b id="hud-troops">0</b><small id="hud-cap"></small></div></div></div>
+      <div class="stat"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 18h18L18 8l-4 4-2-6-2 6-4-4z"/></svg></span><div><small class="lbl">領地</small><div class="v"><b id="hud-cells">0</b><small id="hud-cities"></small></div></div></div>
+      <div class="stat ap"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></span><div><small class="lbl">行動力</small><div class="v"><b id="hud-ap">0</b><small>/12</small></div></div><span class="apbar" id="hud-apbar"></span></div>
+    </div>
+    <div class="hud-row" id="hud-guest">
+      <span class="guest">見学中</span>
+      <button class="btn small gold" id="btn-found">建国する</button>
+    </div>
+  </header>
+
+  <div id="mapctl">
+    <button class="ctl" id="z-in" aria-label="拡大">＋</button>
+    <button class="ctl" id="z-out" aria-label="縮小">－</button>
+    <button class="ctl" id="z-home" aria-label="自分の国へ" title="自分の国へ">🏰</button>
+    <button class="ctl" id="z-fit" aria-label="全体を見る" title="全体を見る">🧭</button>
+    <button class="ctl" id="z-mode" aria-label="色分けの切り替え" title="国ごと／同盟ごと">🎨</button>
+  </div>
+
+  <div id="legend" aria-hidden="true"><span class="pl">👤 プレイヤー</span><span class="cp">🤖 CPU</span></div>
+
+  <div id="cellcard" hidden></div>
+
+  <section id="panel">
+    <nav id="tabs"></nav>
+    <div id="panel-body">
+      <div class="tab" id="tab-policy"></div>
+      <div class="tab" id="tab-act" hidden></div>
+      <div class="tab" id="tab-team" hidden></div>
+      <div class="tab" id="tab-rank" hidden></div>
+      <div class="tab" id="tab-more" hidden></div>
+      <div id="promo"></div>
+    </div>
+  </section>
+
+  <div id="netband" hidden></div>
+  <div id="toast" hidden></div>
+
+  <div class="overlay" id="start" hidden>
+    <div class="card start">
+      <div class="hero"><img src="img/hero.webp" alt="" width="1280" height="853"></div>
+      <div class="start-logo"><img src="img/logo.webp" alt="クニトリ" width="720" height="227"><span class="demo">デモ版</span></div>
+      <p class="lead">寝ている間も、国は広がる。</p>
+      <ul class="points">
+        <li><span>🌍</span>みんなでひとつの大陸を取り合う陣取りゲーム</li>
+        <li><span>⏳</span>5分ごとに、あなたの国が自動で広がる（放っておいてもOK）</li>
+        <li><span>⚔️</span>行動力を使えば、狙った場所へ進軍・要塞づくり・徴兵ができる</li>
+        <li><span>🤝</span>合言葉で同盟を組んで、仲間と大陸を取りにいく</li>
+      </ul>
+      <p class="invite-note" id="f-invite" hidden></p>
+      <label class="field">国の名前<input id="f-name" maxlength="10" placeholder="10文字まで" autocomplete="off"></label>
+      <div class="field">国の色<div id="f-colors" class="swatches"></div></div>
+      <button class="btn gold wide" id="f-go">建国する</button>
+      <p class="note">はじめの72時間は、ほかのプレイヤーから攻められません。登録なし・無料です。<br>デモ版のため、世界は予告なく作り直すことがあります。<br><a href="about.html">このゲームについて・プライバシーポリシー</a></p>
+      <div class="row">
+        <button class="btn ghost" id="f-look">まずは地図を見る</button>
+        <button class="btn ghost" id="f-restore">引き継ぎコードで続きから</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="modal" hidden><div class="card" id="modal-card"></div></div>
+</div>
+<script type="module" src="js/app.js?v=0.3.0"></script>
+</body>
+</html>
