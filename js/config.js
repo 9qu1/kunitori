@@ -17,8 +17,11 @@ export const PAGE_URL = location.origin + location.pathname.replace(/[^/]*$/, ''
 const q = new URLSearchParams(location.search);
 export const ADS = {
   admaxShare: 0.9,
+  // 2026-10-13 夜 ユーザー「広告を追従型に」→ パネルのいちばん下に固定（中身をスクロールしても見えたまま）
+  //   スマホの画面（幅820px未満）: 画面の下の帯 320×50 ／ PC の画面: 右のパネルの下 300×250
   admax: {
-    sp: '73ec52f7699807c7ddef28c425f1002d', // クニトリ スマホ300x250（オーバーレイOFF・アダルト非表示・ゲーム）
+    bar: 'e6f5891f2c8c8bbd8f8d0c152e3989ea', // クニトリ スマホ追従320x50（自動リサイズOFF・オーバーレイOFF・アダルト非表示・ゲーム）
+    sp: '73ec52f7699807c7ddef28c425f1002d', // クニトリ スマホ300x250（横向きのスマホなど、PC の並びのときに使う）
     pc: '4ca6b12c4a7155e449017670d9ab948b', // クニトリ PC300x250
   },
   force: q.get('ads') === 'admax' || q.get('ads') === 'pr' ? q.get('ads') : null,

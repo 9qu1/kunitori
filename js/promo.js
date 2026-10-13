@@ -1,6 +1,6 @@
 // 広告の枠: 忍者AdMax（9割）と、くぁくぁのほかのサイトの紹介（1割）
 //   紹介の文はドコマデ列車の js/pr.js と同じ。絵は 9qu1.com のトップと同じ画面写真とアイコン（img/pr/）
-import { ADS } from './config.js?v=0.3.0';
+import { ADS } from './config.js?v=0.3.1';
 
 export const PR_SITES = [
   { id: 'rikaido', name: 'リカイド', catch: '友達の理解度チェック', desc: '2択のじぶんクイズを作って友達にシェア。「本人ならどっち？」を予想して、正解数でランキング。', url: 'https://rikaido.me/', cta: 'つくってみる' },
@@ -51,6 +51,16 @@ export function prBig(where = 'panel') {
     el('span', { class: 'pr-desc', text: s.desc }));
 }
 
+// 帯の紹介（スマホの画面の下の帯・320×50）
+export function prBar(where = 'bar') {
+  const s = pickPr();
+  return el('a', { class: 'pr-bar', href: prHref(s, where), target: '_blank', rel: 'noopener', 'aria-label': `${s.name}（${s.catch}）を開く` },
+    el('img', { src: `img/pr/${s.id}-icon.webp`, alt: '', width: 36, height: 36 }),
+    el('span', { class: 'pr-text' }, el('b', { text: s.name }), el('small', { text: s.catch })),
+    el('em', { class: 'pr-go', text: `${s.cta} ›` }),
+    el('span', { class: 'pr-tag', text: 'PR' }));
+}
+
 // 小さい紹介（おかえりの画面など）
 export function prSmall(where = 'welcome') {
   const s = pickPr();
@@ -63,29 +73,32 @@ export function prSmall(where = 'welcome') {
 // スマホかどうか（AdMax のスマホ用の枠はスマホにしか出ないので、出し分ける）
 export const isPhone = () => /iPhone|iPod|Android.+Mobile|Windows Phone|Mobile.+Firefox/i.test(navigator.userAgent);
 
-// 下の枠に入れるものを決めて入れる（ページを開いたときに1回）。戻り値は 'admax' か 'pr'
-export function mountAdSlot(box) {
-  const useAdmax = ADS.force ? ADS.force === 'admax' : ADS.enabled && Math.random() < ADS.admaxShare;
+// パネルの下の枠（追従）に入れるものを決めて入れる。戻り値は 'admax' か 'pr'
+//   AdMax か紹介かは、ページを開いたときに1回だけ決める（並びが変わって入れなおすときも同じほう）
+//   layout: 'bar'（スマホの画面・320×50）か 'side'（PC の画面・300×250）
+const useAdmax = ADS.force ? ADS.force === 'admax' : ADS.enabled && Math.random() < ADS.admaxShare;
+export function mountAdSlot(box, layout) {
   box.replaceChildren();
-  if (!useAdmax) {
-    box.append(prBig('panel'));
+  box.dataset.layout = layout;
+  // スマホ用の帯の枠はスマホにしか出ない → スマホでなければ紹介にする
+  if (!useAdmax || (layout === 'bar' && !isPhone())) {
+    box.append(layout === 'bar' ? prBar('bar') : prBig('panel'));
     box.dataset.kind = 'pr';
     return 'pr';
   }
-  const id = isPhone() ? ADS.admax.sp : ADS.admax.pc;
+  const id = layout === 'bar' ? ADS.admax.bar : isPhone() ? ADS.admax.sp : ADS.admax.pc;
+  const [w, h] = layout === 'bar' ? [320, 50] : [300, 250];
   box.dataset.kind = 'admax';
-  box.append(el('div', { class: 'ad-label', text: '広告' }),
-    el('div', { class: 'admax-ads', 'data-admax-id': id, style: 'display:inline-block;width:300px;height:250px;' }));
+  box.append(el('div', { class: 'admax-ads', 'data-admax-id': id, style: `display:inline-block;width:${w}px;height:${h}px;` }));
   // 忍者AdMax の非同期タグ（管理画面の「非同期タグ」と同じ中身。script は DOM に足したものしか動かないので作って足す）
   (window.admaxads = window.admaxads || []).push({ admax_id: id, type: 'banner' });
-  if (!document.querySelector('script[data-admax]')) {
-    const s = document.createElement('script');
-    s.src = 'https://adm.shinobi.jp/st/t.js';
-    s.async = true;
-    s.charset = 'utf-8';
-    s.dataset.admax = '1';
-    document.body.append(s);
-  }
+  document.querySelector('script[data-admax]')?.remove();
+  const sc = document.createElement('script');
+  sc.src = 'https://adm.shinobi.jp/st/t.js';
+  sc.async = true;
+  sc.charset = 'utf-8';
+  sc.dataset.admax = '1';
+  document.body.append(sc);
   return 'admax';
 }
 

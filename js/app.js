@@ -1,9 +1,9 @@
 // クニトリの画面
-import { R, VERSION } from './shared/rules.js?v=0.3.0';
-import { MapView } from './map.js?v=0.3.0';
-import { Net, api } from './net.js?v=0.3.0';
-import { prSmall, mountAdSlot, ALL_URL } from './promo.js?v=0.3.0';
-import { PAGE_URL } from './config.js?v=0.3.0';
+import { R, VERSION } from './shared/rules.js?v=0.3.1';
+import { MapView } from './map.js?v=0.3.1';
+import { Net, api } from './net.js?v=0.3.1';
+import { prSmall, mountAdSlot, ALL_URL } from './promo.js?v=0.3.1';
+import { PAGE_URL } from './config.js?v=0.3.1';
 
 // ---------- 小さな道具 ----------
 
@@ -989,10 +989,22 @@ function toast(text, err) {
 
 // ---------- 下の枠（忍者AdMax 9割・くぁくぁのほかのサイトの紹介 1割） ----------
 
+// 広告はパネルのいちばん下に固定（追従）。スマホの画面は下の帯 320×50、PC の画面は右のパネルの下 300×250
+const adLayout = () => (innerWidth < 820 ? 'bar' : 'side');
 $('#promo').replaceChildren(
-  el('div', { id: 'ad-slot', class: 'ad-box' }),
   el('a', { class: 'more-apps', href: `${ALL_URL}?utm_source=kunitori&utm_medium=pr&utm_content=more`, target: '_blank', rel: 'noopener', text: 'くぁくぁのほかの作品を見る ›' }));
-S.adKind = mountAdSlot($('#ad-slot'));
+S.adLayout = adLayout();
+S.adKind = mountAdSlot($('#ad-slot'), S.adLayout);
+// 画面を回すなどで並びが変わったら、その並びの枠に入れなおす
+addEventListener('resize', () => {
+  clearTimeout(S.adT);
+  S.adT = setTimeout(() => {
+    if (adLayout() === S.adLayout) return;
+    S.adLayout = adLayout();
+    S.adKind = mountAdSlot($('#ad-slot'), S.adLayout);
+    updateInsets();
+  }, 400);
+});
 
 // ---------- パネルと地図のボタン ----------
 
@@ -1012,6 +1024,9 @@ function updateInsets() {
   const hud = $('#hud').getBoundingClientRect();
   const ph = wide ? 0 : Math.round(innerHeight - panel.top);
   document.documentElement.style.setProperty('--panel-h', `${ph}px`);
+  // 重ねる画面（はじめの画面・おかえり など）が広告にかぶらないように（AdMax の規約 第10条12号②）
+  const adH = wide ? 0 : Math.round(innerHeight - $('#panel-ad').getBoundingClientRect().top);
+  document.documentElement.style.setProperty('--ad-h', `${Math.max(0, adH)}px`);
   document.documentElement.style.setProperty('--hud-h', `${Math.round(hud.bottom)}px`);
   map.setInsets({ top: Math.round(hud.bottom), bottom: ph, right: wide ? 380 : 0 });
 }
