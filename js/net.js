@@ -5,8 +5,8 @@
 //   ・画面に戻った / focus / online で hello。5秒なにも届かなければ張りなおす（凍った接続）
 //   ・12秒ごとに ping。30秒なにも届かなければ張りなおす
 //   ・切断が1.5秒続いたら帯を出す（すぐ戻る切断ではちらつかせない）
-import { VERSION } from './shared/rules.js?v=0.3.1';
-import { API_ORIGIN, WS_URL } from './config.js?v=0.3.1';
+import { VERSION } from './shared/rules.js?v=0.3.2';
+import { API_ORIGIN, WS_URL } from './config.js?v=0.3.2';
 
 export class Net {
   constructor(h) {
@@ -55,7 +55,12 @@ export class Net {
     this.ws = null;
     this.down();
     clearTimeout(this.rt);
-    this.rt = setTimeout(() => this.connect(), Math.min(2000, 500 * 2 ** this.retry++));
+    // 画面が うしろの あいだは つなぎなおさない（まえに もどった ときの wake で つなぐ）
+    if (document.hidden) return;
+    // 待ち時間は 0.5秒から 倍に して 最大 60秒（みんなが いっせいに つなぎなおさない ように ±20% ずらす）
+    //   2026-10-14: もとは 最大 2秒・回数の 上限 なしで、サーバーが ことわり つづけると タブ 1枚で 月 130万回 つなぎに きていた
+    const wait = Math.min(60000, 500 * 2 ** Math.min(this.retry++, 7)) * (0.8 + Math.random() * 0.4);
+    this.rt = setTimeout(() => this.connect(), wait);
   }
 
   // 凍った接続を捨てて張りなおす

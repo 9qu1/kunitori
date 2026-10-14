@@ -1,9 +1,9 @@
 // クニトリの画面
-import { R, VERSION } from './shared/rules.js?v=0.3.1';
-import { MapView } from './map.js?v=0.3.1';
-import { Net, api } from './net.js?v=0.3.1';
-import { prSmall, mountAdSlot, ALL_URL } from './promo.js?v=0.3.1';
-import { PAGE_URL } from './config.js?v=0.3.1';
+import { R, VERSION } from './shared/rules.js?v=0.3.2';
+import { MapView } from './map.js?v=0.3.2';
+import { Net, api } from './net.js?v=0.3.2';
+import { prSmall, mountAdSlot, ALL_URL } from './promo.js?v=0.3.2';
+import { PAGE_URL } from './config.js?v=0.3.2';
 
 // ---------- 小さな道具 ----------
 
@@ -1046,7 +1046,11 @@ setInterval(() => {
 $('#app').addEventListener('scroll', (e) => { e.currentTarget.scrollTop = 0; e.currentTarget.scrollLeft = 0; });
 
 // 調べもの用（コンソールから kt.S などで見られる）
-window.kt = { S, map, net, render };
+// renderNow: 待たずにいま描きなおす（紹介動画を1コマずつ撮るとき・promo/tools/capture-footage.mjs）
+window.kt = {
+  S, map, net, render,
+  renderNow() { renderQueued = false; renderHud(); renderTab(); renderCellCard(); renderTabs(); map.labelsAt = 0; map.raf = 0; map.draw(); },
+};
 
 // 招待リンクの合言葉は、建国するまで覚えておく（いったん見学してから建国しても特典がつく）
 if (S.pendingInv) LS.set('kt-inv', S.pendingInv);
