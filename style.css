@@ -201,9 +201,27 @@ input { font: inherit; }
   padding-bottom: var(--safe-bottom);
 }
 #panel.collapsed #panel-body { display: none; }
-/* スマホ: 開いているタブをもう一度押すと畳める（取っ手で知らせる） */
-#panel::before { content: ""; display: block; width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 6px auto 0; opacity: 0.8; }
-#tabs { display: flex; padding: 6px 6px 0; gap: 3px; flex: none; border-bottom: 1.5px solid var(--line); }
+/* スマホ: 上の取っ手で中身を畳む（地図を広く）・開く。取っ手を上下にスワイプしても、開いているタブをもう一度押しても同じ */
+#panel-toggle {
+  flex: none;
+  align-self: center;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  margin: 4px 0 0;
+  padding: 0 16px 0 12px;
+  border: 1.5px solid var(--line-light);
+  border-radius: 999px;
+  background: var(--paper-light);
+  color: var(--ink-2);
+  font: 700 12px/1 var(--sans);
+  touch-action: none;
+}
+#panel-toggle svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.2s; }
+#panel.collapsed #panel-toggle svg { transform: rotate(180deg); }
+#panel-toggle:active { transform: translateY(1px); }
+#tabs { display: flex; padding: 6px 6px 0; gap: 3px; flex: none; border-bottom: 1.5px solid var(--line); touch-action: none; }
 #tabs button {
   flex: 1;
   min-width: 0;
@@ -228,7 +246,8 @@ input { font: inherit; }
 
 @media (min-width: 820px) {
   #panel { left: auto; top: 0; width: 380px; max-height: none; border-radius: 0; border-top: none; border-left: 2px solid var(--line); }
-  #panel::before { display: none; }
+  #panel-toggle { display: none; }
+  #panel.collapsed #panel-body { display: block; }
   #hud { right: 392px; left: 12px; top: 12px; }
   #mapctl { right: 392px; }
   #legend { left: 12px; bottom: 12px; }

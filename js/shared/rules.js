@@ -1,7 +1,7 @@
 // クニトリのルールの数字（サーバーと画面の両方が読む）
 //   数字を変えたら node tools/sim.mjs で7日ぶん回して、放置と操作の差・寝ている間に減る量を確かめる
 
-export const VERSION = '0.3.2';
+export const VERSION = '0.3.3';
 
 export const R = {
   W: 320,

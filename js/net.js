@@ -5,8 +5,8 @@
 //   ・画面に戻った / focus / online で hello。5秒なにも届かなければ張りなおす（凍った接続）
 //   ・12秒ごとに ping。30秒なにも届かなければ張りなおす
 //   ・切断が1.5秒続いたら帯を出す（すぐ戻る切断ではちらつかせない）
-import { VERSION } from './shared/rules.js?v=0.3.2';
-import { API_ORIGIN, WS_URL } from './config.js?v=0.3.2';
+import { VERSION } from './shared/rules.js?v=0.3.3';
+import { API_ORIGIN, WS_URL } from './config.js?v=0.3.3';
 
 export class Net {
   constructor(h) {

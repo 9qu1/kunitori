@@ -1,6 +1,6 @@
 // 広告の枠: 忍者AdMax（9割）と、くぁくぁのほかのサイトの紹介（1割）
 //   紹介の文はドコマデ列車の js/pr.js と同じ。絵は 9qu1.com のトップと同じ画面写真とアイコン（img/pr/）
-import { ADS } from './config.js?v=0.3.2';
+import { ADS } from './config.js?v=0.3.3';
 
 export const PR_SITES = [
   { id: 'rikaido', name: 'リカイド', catch: '友達の理解度チェック', desc: '2択のじぶんクイズを作って友達にシェア。「本人ならどっち？」を予想して、正解数でランキング。', url: 'https://rikaido.me/', cta: 'つくってみる' },

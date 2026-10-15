@@ -1,9 +1,9 @@
 // クニトリの画面
-import { R, VERSION } from './shared/rules.js?v=0.3.2';
-import { MapView } from './map.js?v=0.3.2';
-import { Net, api } from './net.js?v=0.3.2';
-import { prSmall, mountAdSlot, ALL_URL } from './promo.js?v=0.3.2';
-import { PAGE_URL } from './config.js?v=0.3.2';
+import { R, VERSION } from './shared/rules.js?v=0.3.3';
+import { MapView } from './map.js?v=0.3.3';
+import { Net, api } from './net.js?v=0.3.3';
+import { prSmall, mountAdSlot, ALL_URL } from './promo.js?v=0.3.3';
+import { PAGE_URL } from './config.js?v=0.3.3';
 
 // ---------- 小さな道具 ----------
 
@@ -315,10 +315,44 @@ function buildTabs() {
     nav.append(b);
   }
 }
+// 下のパネルを畳む（地図を広く）・開く。スマホだけ（PC は右のパネルなので畳まない）。畳んだかどうかは覚えておく
+function setCollapsed(on) {
+  if (innerWidth >= 820) on = false;
+  const panel = $('#panel'), btn = $('#panel-toggle');
+  panel.classList.toggle('collapsed', on);
+  btn.setAttribute('aria-expanded', String(!on));
+  btn.querySelector('.pt-label').textContent = on ? '情報を開く' : '地図を広く';
+  LS.set('kt-panel', on ? 'min' : '');
+  requestAnimationFrame(updateInsets);
+}
+const isCollapsed = () => $('#panel').classList.contains('collapsed');
+function setupPanelToggle() {
+  const btn = $('#panel-toggle');
+  // 取っ手とタブの列は、上下にスワイプしても開け閉めできる（スワイプしたときは、そのあとのクリックを無視する）
+  // 指が取っ手の外へ出ても追えるように、押している間は画面全体で動きを見る
+  let y0 = null, swiped = false;
+  const move = (e) => {
+    if (y0 == null || swiped) return;
+    const dy = e.clientY - y0;
+    if (Math.abs(dy) < 28) return;
+    swiped = true;
+    setCollapsed(dy > 0);
+  };
+  const end = () => { y0 = null; removeEventListener('pointermove', move); removeEventListener('pointerup', end); removeEventListener('pointercancel', end); };
+  for (const zone of [btn, $('#tabs')]) {
+    zone.addEventListener('pointerdown', (e) => {
+      y0 = e.clientY; swiped = false;
+      addEventListener('pointermove', move); addEventListener('pointerup', end); addEventListener('pointercancel', end);
+    });
+    zone.addEventListener('click', (e) => { if (swiped) { e.stopPropagation(); e.preventDefault(); swiped = false; } }, true);
+  }
+  btn.addEventListener('click', () => setCollapsed(!isCollapsed()));
+  if (LS.get('kt-panel') === 'min') setCollapsed(true);
+}
+
 function openTab(key) {
-  const panel = $('#panel');
-  if (key === S.tab && innerWidth < 820) panel.classList.toggle('collapsed');
-  else panel.classList.remove('collapsed');
+  if (key === S.tab && innerWidth < 820) setCollapsed(!isCollapsed());
+  else if (isCollapsed()) setCollapsed(false);
   S.tab = key;
   LS.set('kt-tab', S.tab);
   if (S.tab === 'team') S.unreadChat = 0;
@@ -431,8 +465,7 @@ function renderAct() {
         el('div', {}, el('h4', { text: title }), cost(k))),
       el('p', { text }), btn);
     const pick = (what) => () => {
-      if (innerWidth < 820) $('#panel').classList.add('collapsed');
-      requestAnimationFrame(updateInsets);
+      if (innerWidth < 820) setCollapsed(true);
       toast(what === 'march' ? `地図で、国の外（${R.MARCH_REACH}マス以内）をタップしてください` : '地図で、自分の国をタップしてください');
     };
     put(box,
@@ -1009,6 +1042,7 @@ addEventListener('resize', () => {
 // ---------- パネルと地図のボタン ----------
 
 buildTabs();
+setupPanelToggle();
 $('#z-in').addEventListener('click', () => map.zoomBy(1.5));
 $('#z-out').addEventListener('click', () => map.zoomBy(1 / 1.5));
 $('#z-home').addEventListener('click', () => {
